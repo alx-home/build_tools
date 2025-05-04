@@ -37,7 +37,7 @@ function(ts_app)
    endif()
 
    if (NOT DEFINED arg_BUILD_TARGET)
-      set(arg_BUILD_TARGET "build")
+      set(arg_BUILD_TARGET "build $<$<CONFIG:DEBUG>:--dev>")
    endif()
 
 
