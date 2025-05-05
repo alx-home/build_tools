@@ -1,66 +1,57 @@
 function(ts_app)
    set(options)
-   set(oneValueArgs TARGET_NAME APP_DIR BUILD_TARGET OUTPUT_DIR)
-   set(multiValueArgs DEPENDS)
+   set(oneValueArgs TARGET_NAME APP_DIR OUTPUT_DIR OUTPUT)
+   set(multiValueArgs DEPENDS BUILD_TARGET)
    cmake_parse_arguments(PARSE_ARGV 0 arg
       "${options}" "${oneValueArgs}" "${multiValueArgs}"
    )
 
+   if (NOT DEFINED arg_DEPENDS) 
+      message(FATAL_ERROR "DEPENDS is missing!")
+   endif()
+
    if (DEFINED arg_APP_DIR)
       if (NOT DEFINED arg_OUTPUT_DIR)
-         file(RELATIVE_PATH arg_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR} ${arg_APP_DIR})
-         set(arg_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/${arg_OUTPUT_DIR}/dist)
+         set(arg_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/${arg_APP_DIR}/dist)
       endif()
    else()
-      set(arg_APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+      set(arg_APP_DIR "src")
       if (NOT DEFINED arg_OUTPUT_DIR)
-         set(arg_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/dist")
+         set(arg_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/dist)
       endif()
    endif()
-   
-   file(GLOB_RECURSE ASSETS
-      ${arg_APP_DIR}/*
-      ${CMAKE_CURRENT_SOURCE_DIR}/.env.*
-      ${CMAKE_CURRENT_SOURCE_DIR}/build.ts
-      ${CMAKE_CURRENT_SOURCE_DIR}/index.html
-      ${CMAKE_CURRENT_SOURCE_DIR}/package.json
-      ${CMAKE_CURRENT_SOURCE_DIR}/tailwind.config.ts
-      ${CMAKE_CURRENT_SOURCE_DIR}/tsconfig.json
-   )
-   
-   if (DEFINED arg_DEPENDS)
-      file(GLOB_RECURSE ASSETS_
-         ${arg_DEPENDS}/*
-      )
 
-      list(APPEND ASSETS ${ASSETS_})
+   if (NOT DEFINED arg_OUTPUT)
+      set(arg_OUTPUT ${arg_OUTPUT_DIR}/index.html)
    endif()
-
+   
    if (NOT DEFINED arg_BUILD_TARGET)
-      set(arg_BUILD_TARGET "build $<$<CONFIG:DEBUG>:--dev>")
+      set(arg_BUILD_TARGET "build$<$<CONFIG:DEBUG>:\:dev>")
    endif()
 
+   find_program(NPM npm)
 
-   get_target_property(DEPS alx-home_ts_utils DEPS)
+   message("TS App ${arg_TARGET_NAME} : ${arg_APP_DIR} -> ${arg_OUTPUT_DIR}")
+   get_target_property(TS_UTILS_DEPS alx-home_ts_utils DEPS)
+   list(APPEND arg_DEPENDS ${TS_UTILS_DEPS})
    add_custom_command(
-      OUTPUT ${arg_OUTPUT_DIR}/index.html
+      OUTPUT ${arg_OUTPUT}
       DEPENDS 
          alx-home_ts_utils
-         ${DEPS}
-         ${ASSETS}
+         ${arg_DEPENDS}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND npm run "${arg_BUILD_TARGET}"
+      COMMAND NPM run ${arg_BUILD_TARGET}
+      COMMENT "${arg_TARGET_NAME}: Running NPM run ${arg_BUILD_TARGET}"
    )
 
-   list(APPEND DEPS ${arg_OUTPUT_DIR}/index.html)
    add_custom_target(${arg_TARGET_NAME}
       DEPENDS 
          alx-home_ts_utils
-         ${DEPS}
+         ${arg_OUTPUT}
    )
 
    set_target_properties(${arg_TARGET_NAME} PROPERTIES
-      FOLDER ${arg_OUTPUT_DIR}/
-      DEPS "${DEPS}"
+      OUTPUT_DIRECTORY ${arg_OUTPUT_DIR}/
+      DEPS "${arg_OUTPUT}"
    )
 endfunction(ts_app)
