@@ -2,16 +2,18 @@ function(win32_executable)
    set(options)
    set(oneValueArgs TARGET_NAME COMPILE_OPTIONS)
    set(multiValueArgs FILES)
+
+   cmake_policy(SET CMP0174 NEW)
    cmake_parse_arguments(PARSE_ARGV 0 arg
       "${options}" "${oneValueArgs}" "${multiValueArgs}"
    )
 
-   add_executable(${arg_TARGET_NAME} WIN32 
+   add_executable(${arg_TARGET_NAME} WIN32
       ${arg_FILES}
    )
 
-   set_target_properties(${arg_TARGET_NAME} 
-      PROPERTIES 
+   set_target_properties(${arg_TARGET_NAME}
+      PROPERTIES
          LINKER_LANGUAGE CXX
          CXX_STANDARD 26
          CMAKE_CXX_STANDARD_REQUIRED ON
@@ -31,7 +33,6 @@ function(win32_executable)
    )
 
    # set(SANITIZE "address")
-
    if(DEFINED SANITIZE)
       list(APPEND COMPILE_OPTIONS
          -fsanitize=${SANITIZE}
@@ -39,17 +40,16 @@ function(win32_executable)
    endif(DEFINED SANITIZE)
 
    # if(DEFINED ADDRESS_SANITIZER)
-   #     list(APPEND COMPILE_OPTIONS 
-   #         "-DADDRESS_SANITIZER"
-   #         -fsanitize-recover=address
-   #     )
+   # list(APPEND COMPILE_OPTIONS
+   # "-DADDRESS_SANITIZER"
+   # -fsanitize-recover=address
+   # )
    # endif(DEFINED ADDRESS_SANITIZER)
-
    if(MSVC)
       list(TRANSFORM COMPILE_OPTIONS PREPEND "-clang:")
       target_compile_options(${arg_TARGET_NAME} PUBLIC /W4 ${COMPILE_OPTIONS})
    else()
-      target_compile_options(${arg_TARGET_NAME} PUBLIC 
+      target_compile_options(${arg_TARGET_NAME} PUBLIC
          -export-dynamic
          -ggdb3 -pg -g
          ${COMPILE_OPTIONS}
