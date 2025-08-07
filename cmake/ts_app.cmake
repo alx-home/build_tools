@@ -55,6 +55,7 @@ function(ts_app)
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND NPM run ${arg_BUILD_TARGET}
       COMMENT "${arg_TARGET_NAME}: Running NPM run ${arg_BUILD_TARGET}"
+      VERBATIM
    )
 
    add_custom_target(${arg_TARGET_NAME}
