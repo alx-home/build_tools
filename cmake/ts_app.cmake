@@ -30,7 +30,7 @@ function(ts_app)
       set(arg_BUILD_TARGET "build$<$<CONFIG:DEBUG>:\:dev>")
    endif()
 
-   find_program(NPM npm)
+   find_program(NPM npm REQUIRED)
 
    message("TS App ${arg_TARGET_NAME} : ${arg_APP_DIR} -> ${arg_OUTPUT_DIR}")
    get_target_property(TS_UTILS_SOURCES alx-home_ts_utils SOURCES)

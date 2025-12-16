@@ -15,7 +15,7 @@ function(win32_executable)
    set_target_properties(${arg_TARGET_NAME}
       PROPERTIES
          LINKER_LANGUAGE CXX
-         CXX_STANDARD 26
+         CXX_STANDARD 23
          CMAKE_CXX_STANDARD_REQUIRED ON
          CMAKE_CXX_EXTENSIONS ON
    )
