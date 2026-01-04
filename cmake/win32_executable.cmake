@@ -19,6 +19,7 @@ function(win32_executable)
          CMAKE_CXX_STANDARD_REQUIRED ON
          CMAKE_CXX_EXTENSIONS ON
    )
+   target_compile_definitions(${arg_TARGET_NAME} PRIVATE NOMINMAX)
 
    target_include_directories(${arg_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

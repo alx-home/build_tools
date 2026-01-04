@@ -8,7 +8,7 @@ function(win32_library)
 
    list(LENGTH arg_FILES size_FILES)
 
-   if (size_FILES GREATER 0)
+   if(size_FILES GREATER 0)
       set(SCOPE PUBLIC)
       add_library(${arg_TARGET_NAME} ${arg_FILES})
    else()
@@ -16,16 +16,17 @@ function(win32_library)
       add_library(${arg_TARGET_NAME} INTERFACE)
    endif()
 
-
    target_include_directories(${arg_TARGET_NAME} ${SCOPE} ${CMAKE_CURRENT_SOURCE_DIR})
 
-   set_target_properties(${arg_TARGET_NAME} 
-      PROPERTIES 
+   set_target_properties(${arg_TARGET_NAME}
+      PROPERTIES
          LINKER_LANGUAGE CXX
          CXX_STANDARD 23
          CMAKE_CXX_STANDARD_REQUIRED ON
          CMAKE_CXX_EXTENSIONS ON
    )
+
+   target_compile_definitions(${arg_TARGET_NAME} PRIVATE NOMINMAX)
 
    set(COMPILE_OPTIONS
       ${arg_COMPILE_OPTIONS}
@@ -38,7 +39,6 @@ function(win32_library)
    )
 
    # set(SANITIZE "address")
-
    if(DEFINED SANITIZE)
       list(APPEND COMPILE_OPTIONS
          -fsanitize=${SANITIZE}
@@ -46,12 +46,11 @@ function(win32_library)
    endif(DEFINED SANITIZE)
 
    # if(DEFINED ADDRESS_SANITIZER)
-   #     list(APPEND COMPILE_OPTIONS 
-   #         "-DADDRESS_SANITIZER"
-   #         -fsanitize-recover=address
-   #     )
+   # list(APPEND COMPILE_OPTIONS
+   # "-DADDRESS_SANITIZER"
+   # -fsanitize-recover=address
+   # )
    # endif(DEFINED ADDRESS_SANITIZER)
-
    if(MSVC)
       list(TRANSFORM COMPILE_OPTIONS PREPEND "-clang:")
       target_compile_options(${arg_TARGET_NAME} ${SCOPE} /W4 ${COMPILE_OPTIONS})
