@@ -31,6 +31,7 @@ function(win32_executable)
       -ftemplate-backtrace-limit=0
       "$<$<CONFIG:Release>:-O3>"
       "$<$<CONFIG:Debug>:-O0>"
+      "$<$<CONFIG:DEBUG>:-g>"
    )
 
    # set(SANITIZE "address")
