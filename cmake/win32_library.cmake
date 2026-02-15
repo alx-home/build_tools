@@ -28,6 +28,41 @@ function(win32_library)
 
    target_compile_definitions(${arg_TARGET_NAME} PRIVATE NOMINMAX)
 
+   if(ENABLE_ASAN)
+      if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+         if(MSVC)
+            # ASAN with clang-cl requires the release CRT (/MD), not the debug CRT (/MDd).
+            set_property(TARGET ${arg_TARGET_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+         endif()
+
+         target_compile_definitions(${arg_TARGET_NAME} ${SCOPE}
+            _ITERATOR_DEBUG_LEVEL=0
+            _HAS_ITERATOR_DEBUGGING=0
+            _DISABLE_STRING_ANNOTATION
+            _DISABLE_VECTOR_ANNOTATION
+         )
+
+         if(ASAN_RT_DIR)
+            target_link_options(${arg_TARGET_NAME} PRIVATE "/LIBPATH:${ASAN_RT_DIR}")
+         endif()
+
+         target_link_libraries(${arg_TARGET_NAME} PRIVATE
+            clang_rt.asan_dynamic-x86_64
+            clang_rt.asan_dynamic_runtime_thunk-x86_64
+         )
+
+         if(ASAN_RT_DIR)
+            add_custom_command(TARGET ${arg_TARGET_NAME} POST_BUILD
+               COMMAND ${CMAKE_COMMAND} -E copy_if_different
+               "${ASAN_RT_DIR}/clang_rt.asan_dynamic-x86_64.dll"
+               "$<TARGET_FILE_DIR:${arg_TARGET_NAME}>/clang_rt.asan_dynamic-x86_64.dll"
+            )
+         endif()
+      else()
+         target_link_options(${arg_TARGET_NAME} PRIVATE /fsanitize=address)
+      endif()
+   endif()
+
    set(COMPILE_OPTIONS
       ${arg_COMPILE_OPTIONS}
       -std=c++2c
@@ -38,22 +73,18 @@ function(win32_library)
       "$<$<CONFIG:Debug>:-O0>"
    )
 
-   # set(SANITIZE "address")
-   if(DEFINED SANITIZE)
-      list(APPEND COMPILE_OPTIONS
-         -fsanitize=${SANITIZE}
-      )
-   endif(DEFINED SANITIZE)
+   if(ENABLE_ASAN)
+      list(APPEND COMPILE_OPTIONS "-fsanitize=address")
+   endif()
 
-   # if(DEFINED ADDRESS_SANITIZER)
-   # list(APPEND COMPILE_OPTIONS
-   # "-DADDRESS_SANITIZER"
-   # -fsanitize-recover=address
-   # )
-   # endif(DEFINED ADDRESS_SANITIZER)
    if(MSVC)
       list(TRANSFORM COMPILE_OPTIONS PREPEND "-clang:")
-      target_compile_options(${arg_TARGET_NAME} ${SCOPE} /W4 ${COMPILE_OPTIONS})
+
+      if(DEFINED SANITIZE AND SANITIZE STREQUAL "address")
+         target_compile_options(${arg_TARGET_NAME} ${SCOPE} /W4 /Zi /Od /MD ${COMPILE_OPTIONS})
+      else()
+         target_compile_options(${arg_TARGET_NAME} ${SCOPE} /W4 ${COMPILE_OPTIONS})
+      endif()
    else()
       target_compile_options(${arg_TARGET_NAME} ${SCOPE}
          -export-dynamic
