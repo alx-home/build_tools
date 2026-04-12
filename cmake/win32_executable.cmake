@@ -51,7 +51,7 @@ function(win32_executable)
             )
          endif()
       else()
-         target_link_options(${arg_TARGET_NAME} PRIVATE /fsanitize=address)
+         target_link_options(${arg_TARGET_NAME} PRIVATE /fsanitize=address /fsanitize-address-use-after-scope /fsanitize=undefined)
       endif()
    endif()
 
