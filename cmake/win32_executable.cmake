@@ -84,7 +84,6 @@ function(win32_executable)
       endif()
    else()
       target_compile_options(${arg_TARGET_NAME} PUBLIC
-         -export-dynamic
          -ggdb3 -pg -g
          ${COMPILE_OPTIONS}
          -D_GNU_SOURCE

@@ -87,7 +87,6 @@ function(win32_library)
       endif()
    else()
       target_compile_options(${arg_TARGET_NAME} ${SCOPE}
-         -export-dynamic
          -ggdb3 -pg -g
          ${COMPILE_OPTIONS}
          -D_GNU_SOURCE
