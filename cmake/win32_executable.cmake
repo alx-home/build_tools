@@ -59,38 +59,88 @@ function(win32_executable)
 
    target_include_directories(${arg_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-   set(COMPILE_OPTIONS
-      ${arg_COMPILE_OPTIONS}
-      -std=c++2c
-      "$<$<CONFIG:DEBUG>:-DDEBUG>"
-      -Wall -Wextra -Wpedantic -Wcast-align -Waddress-of-packed-member -Werror
-      -ftemplate-backtrace-limit=0
-      "$<$<CONFIG:Release>:-O3>"
-      "$<$<CONFIG:Debug>:-O0>"
-      "$<$<CONFIG:DEBUG>:-g>"
-   )
-
-   if(ENABLE_ASAN)
-      list(APPEND COMPILE_OPTIONS "-fsanitize=address")
-   endif()
+   set(COMPILE_OPTIONS ${arg_COMPILE_OPTIONS})
 
    if(MSVC)
-      list(TRANSFORM COMPILE_OPTIONS PREPEND "-clang:")
+      if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+         list(APPEND COMPILE_OPTIONS
+            -std=c++2c
+            "$<$<CONFIG:DEBUG>:-DDEBUG>"
+            -Wall -Wextra -Wpedantic -Wcast-align -Waddress-of-packed-member -Werror
+            -ftemplate-backtrace-limit=0
+            "$<$<CONFIG:Release>:-O3>"
+            "$<$<CONFIG:Debug>:-O0>"
+            "$<$<CONFIG:DEBUG>:-g>"
+         )
 
-      if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-         set(COMPILE_OPTIONS /Zi /Zc:__cplusplus /EHsc /Od ${COMPILE_OPTIONS})
+         if(ENABLE_ASAN)
+            list(APPEND COMPILE_OPTIONS "-fsanitize=address")
+         endif()
 
-         if(NOT DEFINED SANITIZE)
-            set(COMPILE_OPTIONS /MDd ${COMPILE_OPTIONS})
+         list(FILTER COMPILE_OPTIONS EXCLUDE REGEX "^$")
+         list(TRANSFORM COMPILE_OPTIONS PREPEND "-clang:")
+
+         if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            set(COMPILE_OPTIONS /Zi /Zc:__cplusplus /EHsc /Od ${COMPILE_OPTIONS})
+
+            if(NOT DEFINED SANITIZE)
+               set(COMPILE_OPTIONS /MDd ${COMPILE_OPTIONS})
+            endif()
+         endif()
+
+         if(DEFINED SANITIZE AND SANITIZE STREQUAL "address")
+            target_compile_options(${arg_TARGET_NAME} PUBLIC /W4 /bigobj /MD ${COMPILE_OPTIONS})
+         else()
+            target_compile_options(${arg_TARGET_NAME} PUBLIC /W4 /bigobj ${COMPILE_OPTIONS})
+         endif()
+      else()
+         list(APPEND COMPILE_OPTIONS
+            /std:c++latest
+            "$<$<CONFIG:DEBUG>:/DDEBUG>"
+            "$<$<CONFIG:Release>:/O2>"
+            "$<$<CONFIG:Debug>:/Od>"
+            /Zc:__cplusplus
+            /EHsc
+            /permissive-
+            /utf-8
+            /WX
+         )
+
+         if(ENABLE_ASAN)
+            list(APPEND COMPILE_OPTIONS /fsanitize=address /fsanitize-address-use-after-scope)
+         endif()
+
+         if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            list(APPEND COMPILE_OPTIONS /Zi)
+
+            if(NOT DEFINED SANITIZE)
+               list(APPEND COMPILE_OPTIONS /MDd)
+            endif()
+         endif()
+
+         list(FILTER COMPILE_OPTIONS EXCLUDE REGEX "^$")
+
+         if(DEFINED SANITIZE AND SANITIZE STREQUAL "address")
+            target_compile_options(${arg_TARGET_NAME} PUBLIC /W4 /bigobj /MD ${COMPILE_OPTIONS})
+         else()
+            target_compile_options(${arg_TARGET_NAME} PUBLIC /W4 /bigobj ${COMPILE_OPTIONS})
          endif()
       endif()
-
-      if(DEFINED SANITIZE AND SANITIZE STREQUAL "address")
-         target_compile_options(${arg_TARGET_NAME} PUBLIC /W4 /MD ${COMPILE_OPTIONS})
-      else()
-         target_compile_options(${arg_TARGET_NAME} PUBLIC /W4 ${COMPILE_OPTIONS})
-      endif()
    else()
+      list(APPEND COMPILE_OPTIONS
+         -std=c++2c
+         "$<$<CONFIG:DEBUG>:-DDEBUG>"
+         -Wall -Wextra -Wpedantic -Wcast-align -Waddress-of-packed-member -Werror
+         -ftemplate-backtrace-limit=0
+         "$<$<CONFIG:Release>:-O3>"
+         "$<$<CONFIG:Debug>:-O0>"
+         "$<$<CONFIG:DEBUG>:-g>"
+      )
+
+      if(ENABLE_ASAN)
+         list(APPEND COMPILE_OPTIONS "-fsanitize=address")
+      endif()
+
       target_compile_options(${arg_TARGET_NAME} PUBLIC
          ${COMPILE_OPTIONS}
          -ggdb3 -pg -g
