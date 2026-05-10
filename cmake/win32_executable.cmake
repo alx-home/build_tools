@@ -77,15 +77,23 @@ function(win32_executable)
    if(MSVC)
       list(TRANSFORM COMPILE_OPTIONS PREPEND "-clang:")
 
+      if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+         set(COMPILE_OPTIONS /Zi /Zc:__cplusplus /EHsc /Od ${COMPILE_OPTIONS})
+
+         if(NOT DEFINED SANITIZE)
+            set(COMPILE_OPTIONS /MDd ${COMPILE_OPTIONS})
+         endif()
+      endif()
+
       if(DEFINED SANITIZE AND SANITIZE STREQUAL "address")
-         target_compile_options(${arg_TARGET_NAME} PUBLIC /W4 /Zi /Od /MD ${COMPILE_OPTIONS})
+         target_compile_options(${arg_TARGET_NAME} PUBLIC /W4 /MD ${COMPILE_OPTIONS})
       else()
          target_compile_options(${arg_TARGET_NAME} PUBLIC /W4 ${COMPILE_OPTIONS})
       endif()
    else()
       target_compile_options(${arg_TARGET_NAME} PUBLIC
-         -ggdb3 -pg -g
          ${COMPILE_OPTIONS}
+         -ggdb3 -pg -g
          -D_GNU_SOURCE
          -Wno-psabi
       )
