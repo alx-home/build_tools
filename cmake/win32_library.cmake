@@ -106,6 +106,7 @@ function(win32_library)
             /EHsc
             /permissive-
             /utf-8
+            /wd4189
             /WX
          )
 

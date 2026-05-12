@@ -103,6 +103,7 @@ function(win32_executable)
             /EHsc
             /permissive-
             /utf-8
+            /wd4189
             /WX
          )
 
