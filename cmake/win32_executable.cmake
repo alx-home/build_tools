@@ -132,12 +132,15 @@ function(win32_executable)
          -std=c++23
          "$<$<CONFIG:DEBUG>:-DDEBUG>"
          -Wall -Wextra -Wpedantic -Wcast-align -Waddress-of-packed-member -Werror
-         -Wno-changes-meaning
          -ftemplate-backtrace-limit=0
          "$<$<CONFIG:Release>:-O3>"
          "$<$<CONFIG:Debug>:-O0>"
          "$<$<CONFIG:DEBUG>:-g>"
       )
+
+      if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+         list(APPEND COMPILE_OPTIONS -Wno-changes-meaning)
+      endif()
 
       if(ENABLE_ASAN)
          list(APPEND COMPILE_OPTIONS "-fsanitize=address")
