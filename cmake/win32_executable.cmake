@@ -64,7 +64,7 @@ function(win32_executable)
    if(MSVC)
       if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
          list(APPEND COMPILE_OPTIONS
-            -std=c++2c
+            -std=c++23
             "$<$<CONFIG:DEBUG>:-DDEBUG>"
             -Wall -Wextra -Wpedantic -Wcast-align -Waddress-of-packed-member -Werror
             -ftemplate-backtrace-limit=0
@@ -129,9 +129,10 @@ function(win32_executable)
       endif()
    else()
       list(APPEND COMPILE_OPTIONS
-         -std=c++2c
+         -std=c++23
          "$<$<CONFIG:DEBUG>:-DDEBUG>"
          -Wall -Wextra -Wpedantic -Wcast-align -Waddress-of-packed-member -Werror
+         -Wno-changes-meaning
          -ftemplate-backtrace-limit=0
          "$<$<CONFIG:Release>:-O3>"
          "$<$<CONFIG:Debug>:-O0>"
