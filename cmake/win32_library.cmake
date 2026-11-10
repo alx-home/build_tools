@@ -1,16 +1,24 @@
 function(win32_library)
-   set(options)
-   set(oneValueArgs TARGET_NAME COMPILE_OPTIONS)
+   set(options STATIC)
+   set(oneValueArgs TARGET_NAME COMPILE_OPTIONS CXX_STANDARD)
    set(multiValueArgs FILES)
    cmake_parse_arguments(PARSE_ARGV 0 arg
       "${options}" "${oneValueArgs}" "${multiValueArgs}"
    )
 
+   if(NOT arg_CXX_STANDARD)
+      set(arg_CXX_STANDARD 23)
+   endif()
+
    list(LENGTH arg_FILES size_FILES)
 
    if(size_FILES GREATER 0)
       set(SCOPE PUBLIC)
-      add_library(${arg_TARGET_NAME} ${arg_FILES})
+      if(arg_STATIC)
+         add_library(${arg_TARGET_NAME} STATIC ${arg_FILES})
+      else()
+         add_library(${arg_TARGET_NAME} ${arg_FILES})
+      endif()
    else()
       set(SCOPE INTERFACE)
       add_library(${arg_TARGET_NAME} INTERFACE)
@@ -21,7 +29,7 @@ function(win32_library)
    set_target_properties(${arg_TARGET_NAME}
       PROPERTIES
          LINKER_LANGUAGE CXX
-         CXX_STANDARD 23
+         CXX_STANDARD ${arg_CXX_STANDARD}
          CMAKE_CXX_STANDARD_REQUIRED ON
          CMAKE_CXX_EXTENSIONS ON
    )
@@ -68,7 +76,7 @@ function(win32_library)
    if(MSVC)
       if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
          list(APPEND COMPILE_OPTIONS
-            -std=c++23
+            -std=c++${arg_CXX_STANDARD}
             "$<$<CONFIG:DEBUG>:-DDEBUG>"
             -Wall -Wextra -Wpedantic -Wcast-align -Waddress-of-packed-member -Werror
             -ftemplate-backtrace-limit=0
@@ -132,7 +140,7 @@ function(win32_library)
       endif()
    else()
       list(APPEND COMPILE_OPTIONS
-         -std=c++23
+         -std=c++${arg_CXX_STANDARD}
          "$<$<CONFIG:DEBUG>:-DDEBUG>"
          -Wall -Wextra -Wpedantic -Wcast-align -Waddress-of-packed-member -Werror
          -ftemplate-backtrace-limit=0
